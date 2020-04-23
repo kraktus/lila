@@ -61,12 +61,12 @@ trait AssetHelper { self: I18nHelper with SecurityHelper =>
   def roundTag = jsAt(s"compiled/lichess.round${isProd ?? (".min")}.js", defer = true)
   def roundNvuiTag(implicit ctx: Context) =
     ctx.blind option
-      jsAt(s"compiled/lichess.round.nvui.min.js", defer = true)
+      jsAt(s"compiled/lichess.round.nvui${isProd ?? (".min")}.js", defer = true)
 
   def analyseTag = jsAt(s"compiled/lichess.analyse${isProd ?? (".min")}.js")
   def analyseNvuiTag(implicit ctx: Context) =
     ctx.blind option
-      jsAt(s"compiled/lichess.analyse.nvui.min.js")
+      jsAt(s"compiled/lichess.analyse.nvui${isProd ?? (".min")}.js")
 
   def captchaTag = jsAt(s"compiled/captcha.js")
 
