@@ -91,6 +91,7 @@ final class JsonView(
               .obj(
                 "animationDuration" -> animationDuration(pov, pref),
                 "coords"            -> pref.coords,
+                "theme"             -> pref.theme,
                 "resizeHandle"      -> pref.resizeHandle,
                 "replay"            -> pref.replay,
                 "autoQueen" -> (if (pov.game.variant == chess.variant.Antichess) Pref.AutoQueen.NEVER
@@ -190,6 +191,7 @@ final class JsonView(
               .obj(
                 "animationDuration" -> animationDuration(pov, pref),
                 "coords"            -> pref.coords,
+                "theme"             -> pref.theme,
                 "resizeHandle"      -> pref.resizeHandle,
                 "replay"            -> pref.replay,
                 "clockTenths"       -> pref.clockTenths
@@ -251,6 +253,7 @@ final class JsonView(
           .obj(
             "animationDuration" -> animationDuration(pov, pref),
             "coords"            -> pref.coords,
+            "theme"             -> pref.theme,
             "moveEvent"         -> pref.moveEvent,
             "resizeHandle"      -> pref.resizeHandle
           )
