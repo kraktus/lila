@@ -3,6 +3,7 @@ import once from './component/once';
 import { hopscotch } from './component/assets';
 
 lichess.load.then(() => {
+  console.warn("user.ts loaded");
   $('.user-show .note-zone-toggle').each(function (this: HTMLElement) {
     $(this).on('click', () => $('.user-show .note-zone').toggle().find('textarea')[0]?.focus());
     if (location.search.includes('note')) $(this).trigger('click');
@@ -45,6 +46,7 @@ lichess.load.then(() => {
       $content = $('.angle-content'),
       browseTo = (path: string) =>
         xhr.text(path).then(html => {
+          console.warn("browseTo called");
           $content.html(html);
           lichess.contentLoaded($content[0]);
           history.replaceState({}, '', path);
