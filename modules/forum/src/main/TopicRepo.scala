@@ -28,6 +28,8 @@ final class TopicRepo(val coll: Coll, filter: Filter = Safe)(implicit
 
   private lazy val notStickyQuery = $doc("sticky" $ne true)
   private lazy val stickyQuery    = $doc("sticky" -> true)
+  private val selectNotHidden = $doc("hidden" -> false)
+  private val selectNotErased = $doc("erasedAt" $exists false)
 
   def close(id: String, value: Boolean): Funit =
     coll.updateField($id(id), "closed", value).void
@@ -61,6 +63,17 @@ final class TopicRepo(val coll: Coll, filter: Filter = Safe)(implicit
       else fuccess(slug)
     }
   }
+
+  def recentInCategs(nb: Int)(categIds: List[String], langs: List[String]): Fu[List[Topic]] =
+    coll
+      .find($doc("categId" $in categIds) ++ trollFilter ++ selectLangs(langs) ++ selectNotHidden ++ selectNotErased)
+      .sort($sort.createdDesc)
+      .cursor[Topic]()
+      .list(nb)
+
+  def selectLangs(langs: List[String]) =
+    if (langs.isEmpty) $empty
+    else $doc("lang" $in langs)
 
   def byCategQuery(categ: Categ)          = $doc("categId" -> categ.slug) ++ trollFilter
   def byCategNotStickyQuery(categ: Categ) = byCategQuery(categ) ++ notStickyQuery
