@@ -450,6 +450,8 @@ final class JsonView(
 
 object JsonView {
 
+  import Condition.{ MaxRating, MinRating }
+
   def top(t: TournamentTop, getLightUser: LightUser.GetterSync): JsArray =
     JsArray {
       t.value.map { p =>
@@ -580,4 +582,20 @@ object JsonView {
     PerfType.Rapid       -> "#",
     PerfType.Classical   -> "+"
   )
+
+    implicit private[tournament] def maxRatingWrites(implicit lang: Lang): OWrites[MaxRating] =
+    OWrites { mr =>
+      Json
+        .obj(
+          "rating" -> mr.rating,
+          "perf" -> mr.perf)
+    }
+
+        implicit private[tournament] def minRatingWrites(implicit lang: Lang): OWrites[MinRating] =
+    OWrites { mr =>
+      Json
+        .obj(
+          "rating" -> mr.rating,
+          "perf" -> mr.perf)
+    }
 }
