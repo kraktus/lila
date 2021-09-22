@@ -75,7 +75,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=["check", "remove"])
     args = parser.parse_args()
-    unuseds = check()
+    #unuseds = check()
+    unuseds = ["beSafe"]
     if args.action == "check":
         print(unuseds)
         if unuseds:
@@ -87,11 +88,12 @@ def main() -> None:
         for path in SOURCE_DIR.iterdir():
             if not path.is_file():
                 continue
-            r = subprocess.run(["sed","-i", "", f"/{unused}/d", path], capture_output=True)
+            # Does not remove automatically multiple lines keys
+            r = subprocess.run(["sed","-i", "", f"/{unused}.+</string>/d", path], capture_output=True)
 
 
-    r = subprocess.run(["node",TRANS_DUMP], capture_output=True)
-    sys.exit(r.returncode)
+    #r = subprocess.run(["node",TRANS_DUMP], capture_output=True)
+    #sys.exit(r.returncode)
 
 
 
