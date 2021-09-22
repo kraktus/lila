@@ -91,7 +91,6 @@ def main() -> None:
 
 
     r = subprocess.run(["node",TRANS_DUMP], capture_output=True)
-    print(r)
     sys.exit(r.returncode)
 
 
