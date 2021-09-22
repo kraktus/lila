@@ -27,7 +27,7 @@ function keyListFrom(name) {
           name,
           code:
             keys
-              .map(k => `val \`${k}\` = new I18nKey('${name === 'site' ? '' : xmlName(name) + ':'}${k}')`)
+              .map(k => `val \`${k}\` = new I18nKey("${name === 'site' ? '' : xmlName(name) + ':'}${k}")`)
               .join('\n') + '\n',
         });
       })
