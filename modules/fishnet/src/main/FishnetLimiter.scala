@@ -17,8 +17,11 @@ final private class FishnetLimiter(
   def apply(sender: Work.Sender, ignoreConcurrentCheck: Boolean, ownGame: Boolean): Fu[RequestStatus] =
     (fuccess(ignoreConcurrentCheck) >>| concurrentCheck(sender)) flatMap {
       case false => fuccess(RequestStatus.SimulatenousRequest)
-      case true if perDayCheck(sender) => fuccess(RequestStatus.Ok)
-      case _ => fuccess(RequestStatus.RateLimited)
+      case true => perDayCheck(sender).map { _ match {
+        case true => RequestStatus.Ok
+        case false => RequestStatus.RateLimited
+        }
+      }
     } flatMap { requestStatus =>
       ((requestStatus == RequestStatus.Ok) ?? requesterApi.add(sender.userId, ownGame)) inject requestStatus
     }
@@ -57,7 +60,6 @@ private def perDayCheck(sender: Work.Sender) =
       case _ => fuFalse
     }
   }
-}
 
 object FishnetLimiter {
   val maxPerDay  = 40
