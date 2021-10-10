@@ -12,13 +12,15 @@ final private class FishnetLimiter(
 )(implicit ec: scala.concurrent.ExecutionContext) {
 
   import FishnetLimiter._
+  import Analyser._
 
-  def apply(sender: Work.Sender, ignoreConcurrentCheck: Boolean, ownGame: Boolean): Fu[Boolean] =
+  def apply(sender: Work.Sender, ignoreConcurrentCheck: Boolean, ownGame: Boolean): Fu[RequestStatus] =
     (fuccess(ignoreConcurrentCheck) >>| concurrentCheck(sender)) flatMap {
-      case false => fuFalse
-      case true  => perDayCheck(sender)
-    } flatMap { accepted =>
-      (accepted ?? requesterApi.add(sender.userId, ownGame)) inject accepted
+      case false => fuccess(RequestStatus.SimulatenousRequest)
+      case true if perDayCheck(sender) => fuccess(RequestStatus.Ok)
+      case _ => fuccess(RequestStatus.RateLimited)
+    } flatMap { requestStatus =>
+      ((requestStatus == RequestStatus.Ok) ?? requesterApi.add(sender.userId, ownGame)) inject requestStatus
     }
 
   private val RequestLimitPerIP = new lila.memo.RateLimit[IpAddress](
@@ -40,7 +42,7 @@ final private class FishnetLimiter(
       case _ => fuFalse
     }
 
-  private def perDayCheck(sender: Work.Sender) =
+private def perDayCheck(sender: Work.Sender) =
     sender match {
       case Work.Sender(_, _, mod, system) if mod || system => fuTrue
       case Work.Sender(userId, ip, _, _) =>
@@ -50,10 +52,11 @@ final private class FishnetLimiter(
               daily < (if (weekly < maxPerWeek * 2 / 3) maxPerDay else maxPerDay * 2 / 3)
           }
         ip.fold(perUser) { ipAddress =>
-          RequestLimitPerIP(ipAddress, cost = 1)(perUser)(fuccess(false))
+          RequestLimitPerIP(ipAddress, cost = 1)(perUser)(fuFalse)
         }
       case _ => fuFalse
     }
+  }
 }
 
 object FishnetLimiter {

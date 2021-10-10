@@ -18,22 +18,24 @@ final class Analyser(
     system: akka.actor.ActorSystem
 ) {
 
+  import Analyser._
+
   val maxPlies = 200
 
   private val workQueue =
     new lila.hub.AsyncActorSequencer(maxSize = 256, timeout = 5 seconds, "fishnetAnalyser")
 
-  def apply(game: Game, sender: Work.Sender): Fu[Boolean] =
+  def apply(game: Game, sender: Work.Sender): Fu[RequestStatus] =
     (game.metadata.analysed ?? analysisRepo.exists(game.id)) flatMap {
-      case true                  => fuFalse
-      case _ if !game.analysable => fuFalse
+      case true                  => fuccess(RequestStatus.AlreadyAnalysed)
+      case _ if !game.analysable => fuccess(RequestStatus.NotAnalysable)
       case _ =>
         limiter(
           sender,
           ignoreConcurrentCheck = false,
           ownGame = game.userIds contains sender.userId
-        ) flatMap { accepted =>
-          accepted ?? {
+        ) flatMap { requestStatus =>
+          (requestStatus == RequestStatus.Ok) ?? {
             makeWork(game, sender) flatMap { work =>
               workQueue {
                 repo getSimilarAnalysis work flatMap {
@@ -54,23 +56,23 @@ final class Analyser(
                 }
               }
             }
-          } inject accepted
+          } inject requestStatus
         }
     }
 
-  def apply(gameId: String, sender: Work.Sender): Fu[Boolean] =
+  def apply(gameId: String, sender: Work.Sender): Fu[RequestStatus] =
     gameRepo game gameId flatMap { _ ?? { apply(_, sender) } }
 
-  def study(req: lila.hub.actorApi.fishnet.StudyChapterRequest): Fu[Boolean] =
+  def study(req: lila.hub.actorApi.fishnet.StudyChapterRequest): Fu[RequestStatus] =
     analysisRepo exists req.chapterId flatMap {
-      case true => fuFalse
+      case true => fuccess(RequestStatus.AlreadyAnalysed)
       case _ =>
         import req._
         val sender = Work.Sender(req.userId, none, mod = false, system = false)
         (fuccess(req.unlimited) >>| limiter(sender, ignoreConcurrentCheck = true, ownGame = false)) flatMap {
-          accepted =>
-            if (!accepted) logger.info(s"Study request declined: ${req.studyId}/${req.chapterId} by $sender")
-            accepted ?? {
+          requestStatus =>
+            if (requestStatus == RequestStatus.Ok) logger.info(s"Study request declined: ${req.studyId}/${req.chapterId} by $sender")
+            (requestStatus == RequestStatus.Ok) ?? {
               val work = makeWork(
                 game = Work.Game(
                   id = chapterId,
@@ -94,7 +96,7 @@ final class Analyser(
                   }
                 }
               }
-            } inject accepted
+            } inject requestStatus
         }
     }
 
@@ -125,4 +127,16 @@ final class Analyser(
       skipPositions = Nil,
       createdAt = DateTime.now
     )
+}
+
+object Analyser {
+
+  sealed trait RequestStatus
+  object RequestStatus {
+    case object AlreadyAnalysed extends RequestStatus
+    case object NotAnalysable extends RequestStatus
+    case object SimulatenousRequest extends RequestStatus
+    case object RateLimited extends RequestStatus
+    case object Ok extends RequestStatus
+  }
 }
