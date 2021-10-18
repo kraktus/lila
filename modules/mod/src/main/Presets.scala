@@ -5,7 +5,8 @@ import play.api.data.Forms._
 import scala.concurrent.ExecutionContext
 
 import lila.memo.SettingStore.{ Formable, StringReader }
-import lila.security.Permission
+import lila.user.User
+import lila.security.{Permission, Granter}
 import reactivemongo.api.bson.BSONHandler
 
 final class ModPresetsApi(
@@ -20,6 +21,12 @@ final class ModPresetsApi(
       case "appeal" => appealPresets.some
       case _        => none
     }
+
+  def getPmPresets(mod: User): ModPresets =
+    ModPresets(pmPresets.get().value.filter(_.permissions.exists(Granter(_)(mod))))
+
+  def getPmPresets(mod: Option[User]): ModPresets =
+    mod.map(getPmPresets).getOrElse(ModPresets(Nil))
 
   lazy val pmPresets = settingStore[ModPresets](
     "modPmPresets",
@@ -65,12 +72,15 @@ object ModPresets {
           .filter(_.nonEmpty)
           .flatMap {
             case perms :: name :: text => ModPreset(name, text mkString "\n", toPermisssions(perms)).some
-            case _            => none
+            case _                     => none
           }
       }
 
     private val permissionsPattern = "Permissions: (\\w*)".r
-    private def toPermisssions(s: String): Set[Permission] = permissionsPattern.findFirstIn(s).map(m => Permission(m.split(",").map(_.toUpperCase).map(key => s"ROLE_$key").toList)).getOrElse(Set(Permission.Admin))
+    private def toPermisssions(s: String): Set[Permission] = permissionsPattern
+      .findFirstIn(s)
+      .map(m => Permission(m.split(",").map(_.trim.toUpperCase).map(key => s"ROLE_$key").toList))
+      .getOrElse(Set(Permission.Admin))
 
     private val presetsIso = lila.common.Iso[String, ModPresets](read, write)
 
