@@ -87,7 +87,10 @@ object ModPresets {
       }
 
     private def toPermisssions(s: String): Set[Permission] =
-      Permission(s.split(",").map(key => s"ROLE_${key.trim.toUpperCase}").toList).incl(Permission.Admin)
+      Permission(s.split(",").map(key => s"ROLE_${key.trim.toUpperCase}").toList) match {
+        case set if set.nonEmpty => set
+        case _ => Set(Permission.Admin)
+      }
 
     private val presetsIso = lila.common.Iso[String, ModPresets](read, write)
 
