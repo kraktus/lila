@@ -6,7 +6,7 @@ import scala.concurrent.ExecutionContext
 
 import lila.memo.SettingStore.{ Formable, StringReader }
 import lila.user.User
-import lila.security.{Permission, Granter}
+import lila.security.{ Granter, Permission }
 import reactivemongo.api.bson.BSONHandler
 
 final class ModPresetsApi(
@@ -60,7 +60,7 @@ object ModPresets {
 
     private def write(presets: ModPresets): String =
       presets.value.map { case ModPreset(name, text, permissions) =>
-        s"Permissions: ${permissions.map(_.key) mkString ","}\n\n$name\n\n$text"
+        s"${permissions.map(_.key) mkString ","}\n\n$name\n\n$text"
       } mkString "\n\n----------\n\n"
 
     private def read(s: String): ModPresets =
@@ -71,16 +71,23 @@ object ModPresets {
           .map(_.linesIterator.toList)
           .filter(_.nonEmpty)
           .flatMap {
-            case perms :: name :: text => ModPreset(name, text mkString "\n", toPermisssions(perms)).some
-            case _                     => none
+            case perms :: rest => {
+              val cleanRest = rest.dropWhile(_.isEmpty)
+              for {
+                name <- cleanRest.headOption
+                text <- cleanRest.tail.some
+              } yield ModPreset(
+                name.pp("title"),
+                text.dropWhile(_.isEmpty) mkString "\n",
+                toPermisssions(perms.pp("perms: "))
+              )
+            }
+            case _ => none
           }
       }
 
-    private val permissionsPattern = "Permissions: (\\w*)".r
-    private def toPermisssions(s: String): Set[Permission] = permissionsPattern
-      .findFirstIn(s)
-      .map(m => Permission(m.split(",").map(_.trim.toUpperCase).map(key => s"ROLE_$key").toList))
-      .getOrElse(Set(Permission.Admin))
+    private def toPermisssions(s: String): Set[Permission] =
+      Permission(s.split(",").map(key => s"ROLE_${key.trim.toUpperCase}").toList).incl(Permission.Admin)
 
     private val presetsIso = lila.common.Iso[String, ModPresets](read, write)
 
