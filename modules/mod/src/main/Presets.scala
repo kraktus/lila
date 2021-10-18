@@ -77,9 +77,9 @@ object ModPresets {
                 name <- cleanRest.headOption
                 text <- cleanRest.tail.some
               } yield ModPreset(
-                name.pp("title"),
+                name,
                 text.dropWhile(_.isEmpty) mkString "\n",
-                toPermisssions(perms.pp("perms: "))
+                toPermisssions(perms)
               )
             }
             case _ => none
