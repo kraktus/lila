@@ -10,6 +10,7 @@ import lila.app._
 import lila.common.HTTPRequest
 import lila.game.{ PgnDump, Pov }
 import lila.round.JsonView.WithFlags
+import lila.fishnet.Analyser.{ RequestStatus => ReqS }
 
 final class Analyse(
     env: Env,
@@ -29,8 +30,10 @@ final class Analyse(
             system = false
           )
         ) map {
-          case true  => NoContent
-          case false => Unauthorized
+          case ReqS.Ok | ReqS.AlreadyAnalysed  => NoContent
+          case ReqS.NotAnalysable => Unauthorized
+          case ReqS.SimulatenousRequest => Unauthorized
+          case ReqS.RateLimited => rateLimited
         }
       }
     }

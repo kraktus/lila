@@ -2,6 +2,7 @@ package lila.fishnet
 
 import org.joda.time.DateTime
 import scala.concurrent.duration._
+import ornicar.scalalib.Zero
 
 import lila.analyse.AnalysisRepo
 import lila.game.{ Game, UciMemo }
@@ -35,7 +36,7 @@ final class Analyser(
           ignoreConcurrentCheck = false,
           ownGame = game.userIds contains sender.userId
         ) flatMap { requestStatus =>
-          (requestStatus == RequestStatus.Ok) ?? {
+          (requestStatus.isOk) ?? {
             makeWork(game, sender) flatMap { work =>
               workQueue {
                 repo getSimilarAnalysis work flatMap {
@@ -69,10 +70,10 @@ final class Analyser(
       case _ =>
         import req._
         val sender = Work.Sender(req.userId, none, mod = false, system = false)
-        (fuccess(req.unlimited) >>| limiter(sender, ignoreConcurrentCheck = true, ownGame = false)) flatMap {
+        (if (req.unlimited) fuccess(RequestStatus.Ok) else limiter(sender, ignoreConcurrentCheck = true, ownGame = false)) flatMap {
           requestStatus =>
-            if (requestStatus == RequestStatus.Ok) logger.info(s"Study request declined: ${req.studyId}/${req.chapterId} by $sender")
-            (requestStatus == RequestStatus.Ok) ?? {
+            if (!requestStatus.isOk) logger.info(s"Study request declined: ${req.studyId}/${req.chapterId} by $sender")
+            (requestStatus.isOk) ?? {
               val work = makeWork(
                 game = Work.Game(
                   id = chapterId,
@@ -131,7 +132,9 @@ final class Analyser(
 
 object Analyser {
 
-  sealed trait RequestStatus
+  sealed trait RequestStatus {
+    val isOk = toString.toLowerCase.pp == "ok"
+  }
   object RequestStatus {
     case object AlreadyAnalysed extends RequestStatus
     case object NotAnalysable extends RequestStatus
@@ -139,4 +142,6 @@ object Analyser {
     case object RateLimited extends RequestStatus
     case object Ok extends RequestStatus
   }
+
+  implicit val RequestStatusZero: Zero[RequestStatus] = Zero.instance(RequestStatus.NotAnalysable)
 }

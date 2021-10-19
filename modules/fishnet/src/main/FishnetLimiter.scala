@@ -23,7 +23,7 @@ final private class FishnetLimiter(
         }
       }
     } flatMap { requestStatus =>
-      ((requestStatus == RequestStatus.Ok) ?? requesterApi.add(sender.userId, ownGame)) inject requestStatus
+      ((requestStatus.isOk) ?? requesterApi.add(sender.userId, ownGame)) inject requestStatus
     }
 
   private val RequestLimitPerIP = new lila.memo.RateLimit[IpAddress](
