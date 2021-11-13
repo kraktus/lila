@@ -27,8 +27,8 @@ final class PuzzleAnon(
         }
       }
 
-  def getBatchFor(nb: Int): Fu[Vector[Puzzle]] = {
-    pool get PuzzleTheme.mix.key map (_ take nb)
+  def getBatchFor(nb: Int, theme: PuzzleTheme.Key): Fu[Vector[Puzzle]] = {
+    pool get theme map (_ take nb)
   }.mon(_.puzzle.selector.anon.batch(nb))
 
   private val poolSize = 150
