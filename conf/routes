@@ -126,6 +126,7 @@ GET   /training/dashboard/$days<\d+>/:path  controllers.Puzzle.dashboard(days: I
 GET   /training/replay/$days<\d+>/:theme controllers.Puzzle.replay(days: Int, theme: String)
 GET   /training/history                controllers.Puzzle.history(page: Int ?= 1)
 GET   /training/batch                  controllers.Puzzle.mobileBcBatchSelect
+GET   /training/batchV2                controllers.Puzzle.mobileBatchSelect
 POST  /training/batch                  controllers.Puzzle.mobileBcBatchSolve
 GET   /training/new                    controllers.Puzzle.mobileBcNew
 GET   /training/$numericalId<\d{6,}>/load      controllers.Puzzle.mobileBcLoad(numericalId: Long)
