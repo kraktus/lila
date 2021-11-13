@@ -412,7 +412,7 @@ final class Puzzle(
 
   /* Mobile API: select a bunch of puzzles for offline use */
   def mobileBatchSelect =
-    Open { implicit ctx => //DEBUG me =>
+    Auth { implicit ctx => me =>
       negotiate(
         html = notFound,
         api = v => {
