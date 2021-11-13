@@ -412,14 +412,14 @@ final class Puzzle(
 
   /* Mobile API: select a bunch of puzzles for offline use */
   def mobileBatchSelect =
-    Auth { implicit ctx => me =>
+    Open { implicit ctx => //DEBUG me =>
       negotiate(
         html = notFound,
         api = v => {
           val nb    = getInt("nb") getOrElse 15 atLeast 1 atMost 30
-          val theme = PuzzleTheme.findOrAny(get("theme") getOrElse "")
-          env.puzzle.batch.nextFor(ctx.me, nb, theme) flatMap { puzzles: Vector[Puz] =>
-            puzzles.map(puzzle => renderJson(puzzle, theme)).sequenceFu
+          val theme = PuzzleTheme.findOrAny(~get("theme")).key
+          env.puzzle.batch.nextFor(ctx.me, nb, theme) flatMap { puzzles =>
+            puzzles.map(puzzle => env.puzzle.jsonView(puzzle, None, None, None)).sequenceFu
           } dmap { puzzlesJsObj => Ok(JsArray(puzzlesJsObj)) }
         }
       )
@@ -432,7 +432,7 @@ final class Puzzle(
         html = notFound,
         api = v => {
           val nb = getInt("nb") getOrElse 15 atLeast 1 atMost 30
-          env.puzzle.batch.nextFor(ctx.me, nb, PuzzleTheme.mix) flatMap { puzzles =>
+          env.puzzle.batch.nextFor(ctx.me, nb, PuzzleTheme.mix.key) flatMap { puzzles =>
             env.puzzle.jsonView.bc.batch(puzzles, ctx.me)
           } dmap { Ok(_) }
         }
