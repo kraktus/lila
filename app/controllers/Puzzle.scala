@@ -429,8 +429,8 @@ final class Puzzle(
         api = v => {
           val nb    = getInt("nb") getOrElse 15 atLeast 1 atMost 30
           val theme = PuzzleTheme.findOrAny(~get("theme")).key
-          env.puzzle.batch.nextFor(ctx.me, nb, theme) flatMap { puzzles =>
-            puzzles.map(puzzle => env.puzzle.jsonView(puzzle, None, None, None)).sequenceFu
+          env.puzzle.batch.nextFor(ctx.me, nb, theme) flatMap {
+            _.map(puzzle => env.puzzle.jsonView(puzzle, None, None, None)).sequenceFu
           } dmap { puzzlesJsObj => Ok(JsArray(puzzlesJsObj)) }
         }
       )
