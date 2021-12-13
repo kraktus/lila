@@ -46,12 +46,10 @@ final class GameProxyRepo(
 
   def urgentGames(user: lila.user.User): Fu[List[Pov]] =
     gameRepo urgentPovsUnsorted user flatMap {
-      _.map { pov =>
+      _.pp("urgentPovsUnsorted:").map { pov =>
         gameIfPresent(pov.gameId) dmap { _.fold(pov)(pov.withGame) }
       }.sequenceFu map { povs =>
-        try {
-          povs sortWith Pov.priority
-        } catch { case _: IllegalArgumentException => povs.sortBy(-_.game.movedAt.getSeconds) }
+        povs sortWith Pov.priority
       }
     }
 }

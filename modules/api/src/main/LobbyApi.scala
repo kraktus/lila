@@ -14,7 +14,11 @@ final class LobbyApi(
   def apply(implicit ctx: Context): Fu[(JsObject, List[Pov])] =
     ctx.me.fold(seekApi.forAnon)(seekApi.forUser).mon(_.lobby segment "seeks") zip
       (ctx.me ?? gameProxyRepo.urgentGames).mon(_.lobby segment "urgentGames") flatMap { case (seeks, povs) =>
-        val displayedPovs = povs take 9
+        povs.sliding(2).map(l => (Pov.priority(l(0), l(1)).pp(s"${l(0)} < ${l(1)} ="), 
+                                  Pov.priority(l(1), l(0)).pp(s"${l(1)} < ${l(0)} ="), 
+                                  Pov.priority(l(0), l(0)).pp(s"${l(0)} < ${l(0)} ="))
+                            ).toList.pp("is Sort good")
+        val displayedPovs = povs.pp("urgentGames") take 9
         lightUserApi.preloadMany(displayedPovs.flatMap(_.opponent.userId)) inject {
           Json.obj(
             "me" -> ctx.me.map { u =>
