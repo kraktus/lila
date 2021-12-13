@@ -23,7 +23,7 @@ object search {
     views.html.base.layout(
       title = "Search users",
       moreCss = cssTag("mod.misc"),
-      moreJs = jsModule("mod.user")
+      moreJs = jsModule("mod.search")
     ) {
       main(cls := "page-menu")(
         views.html.mod.menu("search"),
