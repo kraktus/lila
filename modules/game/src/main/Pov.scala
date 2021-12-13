@@ -72,7 +72,7 @@ object Pov {
 
   private def orInf(i: Option[Int]) = i getOrElse Int.MaxValue
   private def asInt(b: Boolean) = b match {
-    case true => 1
+    case true  => 1
     case false => 0
   }
   private def isFresher(a: Pov, b: Pov) = {
@@ -80,32 +80,48 @@ object Pov {
     val bDate = b.game.movedAt.getSeconds
     aDate > bDate
   }
-  private def povVecOrder(a: Pov) = Vector(asInt(!a.isMyTurn), asInt(orInf(a.remainingSeconds) < 30), asInt(a.hasMoved), orInf(a.remainingSeconds))
+  private def povVecOrder(a: Pov) = Vector(
+    asInt(!a.isMyTurn),
+    asInt(orInf(a.remainingSeconds) < 30),
+    asInt(a.hasMoved),
+    orInf(a.remainingSeconds)
+  )
 
   def priority(a: Pov, b: Pov) = {
-      println("#######")
-      println(a)
-      println(a.isMyTurn)
-      println(a.hasMoved)
-      println(b)
-      println(b.isMyTurn)
-      println(b.hasMoved)
-      println()
-      println(s"is fresh: ${isFresher(a, b)}")
-      println(s"orInf ${orInf(a.remainingSeconds) <= orInf(b.remainingSeconds)}")
+    println("#######")
+    println(a)
+    println(a.isMyTurn)
+    println(orInf(a.remainingSeconds) < 30)
+    println(a.hasMoved)
+    println(a.remainingSeconds)
+    println(b)
+    println(b.isMyTurn)
+    println(orInf(b.remainingSeconds) < 30)
+    println(b.hasMoved)
+    println(b.remainingSeconds)
+    println()
+    println(s"is fresh: ${isFresher(a, b)}")
+    println(s"orInf ${orInf(a.remainingSeconds) <= orInf(b.remainingSeconds)}")
     if (!a.isMyTurn && !b.isMyTurn) isFresher(a, b)
-    else ~povVecOrder(a).zip(povVecOrder(b)).foldLeft(None: Option[Boolean]){case (acc, (a, b)) => acc match {
-      case None if (a!=b) => Some(a < b)
-      case x => x
-    }
+    // else
+      // ~povVecOrder(a).zip(povVecOrder(b)).foldLeft(None: Option[Boolean]) { case (acc, (a, b)) =>
+      //   acc match {
+      //     case None if a != b => Some(a < b)
+      //     case x              => x
+      //   }
+      // }
+      // ~povVecOrder(a).zip(povVecOrder(b)).filter { case (a, b) => a != b }.headOption.map { case (a, b) =>
+      //   a < b
+      // }
+    else if (!a.isMyTurn && b.isMyTurn) false
+    else if (a.isMyTurn && !b.isMyTurn) true
+    // first move has priority over games with more than 30s left
+    else if (orInf(a.remainingSeconds) < 30 && orInf(b.remainingSeconds) > 30) true
+    else if (orInf(b.remainingSeconds) < 30 && orInf(a.remainingSeconds) > 30) false
+    else if (!a.hasMoved && b.hasMoved) true
+    else if (!b.hasMoved && a.hasMoved) false
+    else orInf(a.remainingSeconds) < orInf(b.remainingSeconds)
   }
-    //else if (!a.isMyTurn && b.isMyTurn) false
-    //else if (a.isMyTurn && !b.isMyTurn) true
-    // // first move has priority over games with more than 30s left
-    //else if (!a.hasMoved && orInf(b.remainingSeconds) > 30) true
-    //else if (!b.hasMoved && orInf(a.remainingSeconds) > 30) false
-    //else orInf(a.remainingSeconds) < orInf(b.remainingSeconds)
-    }
 }
 
 case class PovRef(gameId: Game.ID, color: Color) {
