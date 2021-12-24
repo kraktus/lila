@@ -62,11 +62,11 @@ final class KaladinApi(
   def request(user: Suspect, requester: KaladinUser.Requester) =
     sequence[Unit](user) { prev =>
       prev.fold(KaladinUser.make(user, requester).some)(_.queueAgain(requester)) ?? { req =>
-        hasEnoughRecentMoves(user) flatMap {
-          case false =>
-            lila.mon.mod.kaladin.insufficientMoves(requester.name).increment()
-            funit
-          case true =>
+        hasEnoughRecentMoves(user).thenPp flatMap {
+          // case false =>
+          //   lila.mon.mod.kaladin.insufficientMoves(requester.name).increment()
+          //   funit
+          case _ =>
             lila.mon.mod.kaladin.request(requester.name).increment()
             insightApi.indexAll(user.user) >>
               coll(_.update.one($id(req._id), req, upsert = true)).void
