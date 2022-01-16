@@ -113,8 +113,6 @@ final class JsonView(
     "performance"     -> res.performance
   )
 
-  def puzzleHistoryJson(puzzlehistory: Paginator[PuzzleHistory.PuzzleSession]) = PaginatorJson(puzzlehistory)
-
   object bc {
 
     def apply(puzzle: Puzzle, user: Option[User])(implicit
