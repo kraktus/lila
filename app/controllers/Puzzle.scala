@@ -379,6 +379,13 @@ final class Puzzle(
       }
     }
 
+  // def mobileHistory(page: Int) =
+  //   Auth { implicit ctx => me =>
+  //         Reasonable(page) {
+  //           env.puzzle.history(me, page) dmap JsonOk
+  //         }
+  // }
+
   def history(page: Int) =
     Auth { implicit ctx => me =>
       get("u")
