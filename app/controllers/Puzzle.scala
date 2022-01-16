@@ -379,12 +379,15 @@ final class Puzzle(
       }
     }
 
-  // def mobileHistory(page: Int) =
-  //   Auth { implicit ctx => me =>
-  //         Reasonable(page) {
-  //           env.puzzle.history(me, page) dmap JsonOk
-  //         }
-  // }
+  def mobileHistory(page: Int) =
+    Auth { implicit ctx => me =>
+      import lila.puzzle.JsonView._
+      Reasonable(page) {
+        env.puzzle.history(me, page) map { historyPaginator =>
+          Ok(env.puzzle.jsonView.puzzleHistoryJson(historyPaginator))
+        }
+      }
+    }
 
   def history(page: Int) =
     Auth { implicit ctx => me =>
