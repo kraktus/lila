@@ -239,7 +239,7 @@ def artifact_url(session, run, name):
 def tmux(ssh, script, *, dry_run=False):
     command = f"/bin/sh -e -c {shlex.quote(';'.join(script))};/bin/bash"
     outer_command = f"/bin/sh -c {shlex.quote(command)}"
-    shell_command = ["mosh", ssh, "--", "tmux", "new-session", "-A", "-s", "ci-deploy", outer_command]
+    shell_command = ["ssh", ssh, "--", "tmux", "new-session", "-A", "-s", "ci-deploy", outer_command]
     if dry_run:
         print(shlex.join(shell_command))
         return 0
