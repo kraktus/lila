@@ -442,6 +442,7 @@ object I18nKey:
     val `insult`: I18nKey = "insult"
     val `troll`: I18nKey = "troll"
     val `ratingManipulation`: I18nKey = "ratingManipulation"
+    val `sexism`: I18nKey = "sexism"
     val `other`: I18nKey = "other"
     val `reportDescriptionHelp`: I18nKey = "reportDescriptionHelp"
     val `error.provideOneCheatedGameLink`: I18nKey = "error.provideOneCheatedGameLink"

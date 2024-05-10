@@ -13,7 +13,7 @@ object ReportUi:
       (Reason.Comm.key, trans.site.insult.txt()),
       (Reason.Boost.key, trans.site.ratingManipulation.txt()),
       (Reason.Comm.key, trans.site.troll.txt()),
-      (Reason.Sexism.key, "Sexual harassment or Sexist remarks"),
+      (Reason.Sexism.key, trans.site.sexism.txt()),
       (Reason.Username.key, trans.site.username.txt()),
       (Reason.Other.key, trans.site.other.txt())
     )
