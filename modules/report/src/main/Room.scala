@@ -27,7 +27,7 @@ object Room:
       case R.Cheat                           => Cheat
       case R.Boost                           => Boost
       case R.AltPrint | R.CheatPrint         => Print
-      case R.Comm | R.Sexism                 => Comm
+      case R.Comm | R.Sexism | R.SeriousComm => Comm
       case R.Other | R.Playbans | R.Username => Other
 
   case class Scores(value: Map[Room, Int]):

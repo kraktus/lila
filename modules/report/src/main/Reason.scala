@@ -9,7 +9,7 @@ sealed trait Reason:
 
   def name = toString
 
-  def isComm = this == Reason.Comm || this == Reason.Sexism
+  def isComm = this == Reason.Comm || this == Reason.SeriousComm
 
 object Reason:
 
@@ -20,16 +20,17 @@ object Reason:
     override def name = "Print"
   case object Comm extends Reason:
     def flagText = "[FLAG]"
-  case object Boost    extends Reason
-  case object Username extends Reason
-  case object Sexism   extends Reason
-  case object Other    extends Reason
-  case object Playbans extends Reason
+  case object Boost       extends Reason
+  case object Username    extends Reason
+  case object Sexism      extends Reason // BC, replaced with SeriousComm
+  case object SeriousComm extends Reason
+  case object Other       extends Reason
+  case object Playbans    extends Reason
 
-  val all       = List(Cheat, AltPrint, Comm, Boost, Username, Sexism, Other, CheatPrint)
+  val all       = List(Cheat, AltPrint, Comm, Boost, Username, Sexism, SeriousComm, Other, CheatPrint)
   val keys      = all.map(_.key)
   val byKey     = all.mapBy(_.key)
-  val autoBlock = Set(Comm, Sexism)
+  val autoBlock = Set(Comm, SeriousComm)
 
   given Iso.StringIso[Reason] = Iso.string(k => byKey.getOrElse(k, Other), _.key)
 
@@ -49,6 +50,6 @@ object Reason:
     import lila.core.perm.Granter
     reason match
       case Cheat                                               => Granter(_.MarkEngine)
-      case Comm | Sexism                                       => Granter(_.Shadowban)
+      case Comm | Sexism | SeriousComm                         => Granter(_.Shadowban)
       case Boost                                               => Granter(_.MarkBooster)
       case AltPrint | CheatPrint | Playbans | Username | Other => Granter(_.Admin)

@@ -10,10 +10,11 @@ object ReportUi:
   def translatedReasonChoices(using Translate) =
     List(
       (Reason.Cheat.key, trans.site.cheat.txt()),
-      (Reason.Comm.key, trans.site.insult.txt()),
+      (Reason.Comm.key, "Insults / Trolling / Verbal abuse"),
       (Reason.Boost.key, trans.site.ratingManipulation.txt()),
-      (Reason.Comm.key, trans.site.troll.txt()),
-      (Reason.Sexism.key, trans.site.sexism.txt()),
+      (Reason.SeriousComm.key, "Violence / Threats"),
+      (Reason.SeriousComm.key, "Sexism / Harassment / Stalking"),
+      (Reason.SeriousComm.key, "Suicide / Self-injury"),
       (Reason.Username.key, trans.site.username.txt()),
       (Reason.Other.key, trans.site.other.txt())
     )
