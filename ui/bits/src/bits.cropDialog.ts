@@ -68,11 +68,13 @@ export async function initModule(o?: CropOpts) {
     htmlText: `<h2>Crop image to desired shape</h2>
       <div class="crop-view"></div>
       <span class="dialog-actions"><button class="button button-empty cancel">cancel</button>
-      <button class="button submit">submit</button></span>`,
+      <button class="button submit" id="submit-original">submit original</button>
+      <button class="button submit" id="submit-cropped">submit</button></span>`,
     append: [{ where: '.crop-view', node: container }],
     actions: [
       { selector: '.dialog-actions > .cancel', listener: (_, d) => d.close() },
-      { selector: '.dialog-actions > .submit', listener: crop },
+      { selector: '#submit-cropped', listener: crop },
+      { selector: '#submit-original', listener: submitOriginal },
     ],
     onClose: () => {
       URL.revokeObjectURL(url);
@@ -104,6 +106,15 @@ export async function initModule(o?: CropOpts) {
       );
     };
     tryQuality();
+  }
+
+  async function submitOriginal() {
+    // at that point user should have chosen a image to crop already
+    if (opts.source instanceof Blob) {
+      await submit(opts.source);
+    } else {
+      await submit(false, 'Original image not available');
+    }
   }
 
   async function submit(cropped: Blob | false, err?: string) {
