@@ -89,19 +89,22 @@ export async function initModule(o?: CropOpts) {
     view.style.display = 'flex';
     view.style.alignItems = 'center';
     view.innerHTML = site.spinnerHtml;
+    // @ts-ignore
+    console.log("cropper.cropped", cropper.cropped)
     const canvas = cropper.getCroppedCanvas({
       imageSmoothingQuality: 'high',
       maxWidth: opts.max?.pixels,
       maxHeight: opts.max?.pixels,
+      //fillColor: "transparent"
     });
-    const tryQuality = (quality = 0.9) => {
+    const tryQuality = (quality = 1) => {
       canvas.toBlob(
         blob => {
           if (blob && blob.size < (opts.max?.megabytes ?? 100) * 1024 * 1024) submit(blob);
           else if (blob && quality > 0.05) tryQuality(quality * 0.9);
           else submit(false, 'Rendering failed');
         },
-        'image/jpeg',
+        'image/png',
         quality,
       );
     };
