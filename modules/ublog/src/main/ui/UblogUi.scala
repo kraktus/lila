@@ -6,6 +6,8 @@ import scalalib.paginator.Paginator
 import scalalib.model.Language
 import lila.ui.*
 
+import java.time.YearMonth
+
 import ScalatagsTemplate.{ *, given }
 
 final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.PicfitUrl):
@@ -215,6 +217,15 @@ final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.
       byDate.some
     )
 
+  def month(yearMonth: YearMonth, posts: Paginator[UblogPost.PreviewPost])(using Context) =
+    list(
+      title = s"Top posts of $yearMonth",
+      posts = posts,
+      menuItem = "best-of",
+      route = (p, bd) => routes.Ublog.bestOf(yearMonth.getYear, yearMonth.getMonthValue, p),
+      onEmpty = "Nothing to show.",
+    )
+
   private def list(
       title: String,
       posts: Paginator[UblogPost.PreviewPost],
@@ -284,6 +295,7 @@ final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.
 
   def menu(active: Either[UserId, String])(using ctx: Context) =
     def isRight(s: String) = active.fold(_ => false, _ == s)
+    def isActive(s: String) = isRight(s).option("active")
     val lichess            = active.left.toOption.has(UserId.lichess)
     val community = active == Right("community") || (active.left.toOption.exists(ctx.isnt) && !lichess)
     val mine      = active.left.toOption.exists(ctx.is)
@@ -296,18 +308,24 @@ final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.
         )(trans.ublog.communityBlogs())
       ),
       ctx.kid.no.option(
-        a(cls := isRight("topics").option("active"), href := routes.Ublog.topics)(
+        a(
+          cls  := isActive("best-of"),
+          href := langHref(routes.Ublog.communityAll())
+        )("Best of")
+      ),
+      ctx.kid.no.option(
+        a(cls := isActive("topics"), href := routes.Ublog.topics)(
           trans.ublog.blogTopics()
         )
       ),
       (ctx.isAuth && ctx.kid.no).option(
         a(
-          cls  := isRight("friends").option("active"),
+          cls  := isActive("friends"),
           href := routes.Ublog.friends()
         )(trans.ublog.friendBlogs())
       ),
       ctx.kid.no.option(
-        a(cls := isRight("liked").option("active"), href := routes.Ublog.liked())(
+        a(cls := isActive("liked"), href := routes.Ublog.liked())(
           trans.ublog.likedBlogs()
         )
       ),

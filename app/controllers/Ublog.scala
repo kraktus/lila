@@ -1,5 +1,8 @@
 package controllers
 
+import java.time.YearMonth
+import scala.util.Try
+
 import play.api.i18n.Lang
 import play.api.mvc.Result
 
@@ -293,6 +296,16 @@ final class Ublog(env: Env) extends LilaController(env):
                 .liveByTopic(top, page, byDate)
                 .map:
                   views.ublog.ui.topic(top, _, byDate)
+
+  def bestOf(year: Int, month: Int, page: Int) = Open:
+    NotForKids:
+      Reasonable(page, Max(100)):
+        Try(YearMonth.of(year, month)).toOption.so: yearMonth =>
+            Ok.async:
+              env.ublog.paginator
+                .liveByMonth(yearMonth, page)
+                .map:
+                  views.ublog.ui.month(yearMonth, _)
 
   def userAtom(username: UserStr) = Anon:
     env.user.repo
