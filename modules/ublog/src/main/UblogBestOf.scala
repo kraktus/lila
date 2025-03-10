@@ -1,6 +1,6 @@
 package lila.ublog
 
-import java.time.{Year, YearMonth, ZoneOffset}
+import java.time.{ Year, YearMonth, ZoneOffset }
 
 import scala.util.Try
 
@@ -11,9 +11,8 @@ import lila.memo.CacheApi
 
 object UblogBestOf:
 
-  private val ublogOrigin = YearMonth.of(2020, 1) // TODO FIXME check the actual date
+  private val ublogOrigin      = YearMonth.of(2020, 1) // TODO FIXME check the actual date
   private def currentYearMonth = YearMonth.now(ZoneOffset.UTC)
-
 
   def selector(month: YearMonth) =
     val (start, end) = boundsOfMonth(month)
@@ -24,10 +23,15 @@ object UblogBestOf:
     val end   = month.atEndOfMonth().atTime(23, 59, 59)
     (start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC))
 
+    // TODO sanitize input
+  def readYear(year: Int): Option[Year] =
+    Try(Year.of(year)).toOption
 
   def readYearMonth(year: Int, month: Int): Option[YearMonth] =
     safeYearMonth(year, month).filter: ym =>
-          ym.isAfter(ublogOrigin) || ym == (ublogOrigin) && (ym.isBefore(currentYearMonth) || ym == (currentYearMonth))
+      ym.isAfter(ublogOrigin) || ym == (ublogOrigin) && (ym.isBefore(
+        currentYearMonth
+      ) || ym == (currentYearMonth))
 
   case class WithPosts(yearMonth: YearMonth, posts: List[UblogPost.PreviewPost])
 
@@ -35,16 +39,30 @@ final class UblogBestOfApi(colls: UblogColls, ublogApi: UblogApi, cacheApi: Cach
 
   import UblogBsonHandlers.{ *, given }
 
+  // FIXME 12 queries for one cache entry!!
+  // compose aggregation to fix
   private val withPostsCache =
+    // the seq is sorted by most recent first
     cacheApi[Year, Seq[UblogBestOf.WithPosts]](16, "ublog.bestOf.withPosts"):
       _.refreshAfterWrite(1.hour).buildAsyncFuture: year =>
-        (1 to 12).map(x => year.atMonth(x))
-        .map: month => 
-          ublogApi.aggregateVisiblePosts(UblogBestOf.selector(month), 0, 4).map: preview =>
-            UblogBestOf.WithPosts(month, preview)
-        .parallel
+        (1 to 12)
+          .map(x => year.atMonth(x))
+          .map: month =>
+            ublogApi
+              .aggregateVisiblePosts(UblogBestOf.selector(month), 0, 4)
+              .map: preview =>
+                UblogBestOf.WithPosts(month, preview)
+          .parallel
+          .map(_.sortBy(_.yearMonth)(Ordering[YearMonth].reverse))
 
-  //def withPosts: Fu[List[UblogTopic.WithPosts]] = withPostsCache.get {}
+  def ofYear(year: Year): Fu[Seq[UblogBestOf.WithPosts]] = withPostsCache.get(year)
+  // latest 12 months rolling
+  def latest =
+    val curYear = Year.now(ZoneOffset.UTC)
+    for
+      a <- withPostsCache.get(curYear)
+      b <- withPostsCache.get(curYear.minusYears(1))
+    yield (a ++ b).take(12)
 
 private def safeYearMonth(year: Int, month: Int): Option[YearMonth] =
   Try(YearMonth.of(year, month)).toOption

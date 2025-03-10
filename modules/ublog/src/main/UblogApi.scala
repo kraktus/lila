@@ -203,7 +203,6 @@ final class UblogApi(
       (u.count.game > 0 && u.createdSinceDays(2)) || u.hasTitle || u.isVerified || u.isPatron
     }
 
-
   // So far this only hits a prod index if $select contains `topics`, or if byDate is false
   // i.e. byDate can only be true if $select contains `topics`
   private[ublog] def aggregateVisiblePosts(select: Bdoc, offset: Int, length: Int, byDate: Boolean = false) =

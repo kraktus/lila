@@ -1,6 +1,6 @@
 package lila.ublog
 
-import java.time.{YearMonth, ZoneOffset}
+import java.time.{ YearMonth, ZoneOffset }
 
 import reactivemongo.api.*
 import reactivemongo.api.bson.BSONNull
@@ -20,7 +20,6 @@ final class UblogPaginator(
   import UblogBsonHandlers.{ *, given }
   import UblogPost.PreviewPost
   import ublogApi.aggregateVisiblePosts
-
 
   val maxPerPage = MaxPerPage(9)
 
