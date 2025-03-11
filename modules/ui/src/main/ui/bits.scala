@@ -1,11 +1,16 @@
 package lila.ui
 
+import play.api.i18n.Lang
+
+import java.time.{ Month, Year, YearMonth }
+
 import chess.format.Fen
 
 import lila.core.i18n.Translate
 import lila.core.security.HcaptchaForm
 
 import ScalatagsTemplate.{ *, given }
+
 
 object bits:
 
@@ -28,6 +33,42 @@ object bits:
       label(`for` := s"mselect-$id", cls := "fullscreen-mask"),
       st.nav(cls := "mselect__list")(items.map(_(cls := "mselect__item")))
     )
+
+
+  def calendarMselect(id: String, allYears: List[Int], url:(Int,Month) => play.api.mvc.Call)(at: YearMonth)(using lang: Lang) = 
+    def prefix(suffix: String) = s"calendar-mselect__form$suffix"
+    // TODO FIXME how to access DateHelper.showMonth
+    def showMonth(m: Month) = m.toString
+      div(cls := prefix(s"--$id"))(
+          a(
+            href     := url(at.minusMonths(1).getYear, at.minusMonths(1).getMonth),
+            dataIcon := Icon.LessThan
+          ),
+          div(cls := prefix("__selects"))(
+            mselect(
+              prefix(s"__year--$id"),
+              span(at.getYear),
+              allYears.map: y =>
+                a(
+                  cls  := (y == at.getYear).option("current"),
+                  href := url(y, at.getMonth)
+                )(y)
+            ),
+            mselect(
+              prefix(s"__month--$id"),
+              span(showMonth(at.getMonth)),
+              java.time.Month.values.toIndexedSeq.map: m =>
+                a(
+                  cls  := (m == at.getMonth).option("current"),
+                  href := url(at.getYear, m)
+                )(showMonth(m))
+            )
+          ),
+          a(
+            href     := url(at.plusMonths(1).getYear, at.plusMonths(1).getMonth),
+            dataIcon := Icon.GreaterThan
+          )
+        )
 
   def fenAnalysisLink(fen: Fen.Full)(using Translate) =
     a(href := routes.UserAnalysis.parseArg(ChessHelper.underscoreFen(fen)))(
