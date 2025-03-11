@@ -33,7 +33,8 @@ object bits:
       st.nav(cls := "mselect__list")(items.map(_(cls := "mselect__item")))
     )
 
-  def calendarMselect(id: String, allYears: List[Int], url: (Int, Month) => play.api.mvc.Call)(at: YearMonth)(
+  // url: (year: Int, month: Int)
+  def calendarMselect(id: String, allYears: List[Int], url: (Int, Int) => play.api.mvc.Call)(at: YearMonth)(
       using lang: Lang
   ) =
     val prefix                   = s"calendar-mselect"
@@ -42,7 +43,7 @@ object bits:
     def showMonth(m: Month) = m.toString
     div(cls := s"$prefix $prefix--$id")(
       a(
-        href     := url(at.minusMonths(1).getYear, at.minusMonths(1).getMonth),
+        href     := url(at.minusMonths(1).getYear, at.minusMonths(1).getMonthValue),
         dataIcon := Icon.LessThan
       ),
       div(cls := prefixed("__selects"))(
@@ -52,7 +53,7 @@ object bits:
           allYears.map: y =>
             a(
               cls  := (y == at.getYear).option("current"),
-              href := url(y, at.getMonth)
+              href := url(y, at.getMonthValue)
             )(y)
         ),
         mselect(
@@ -61,12 +62,12 @@ object bits:
           java.time.Month.values.toIndexedSeq.map: m =>
             a(
               cls  := (m == at.getMonth).option("current"),
-              href := url(at.getYear, m)
+              href := url(at.getYear, m.getValue)
             )(showMonth(m))
         )
       ),
       a(
-        href     := url(at.plusMonths(1).getYear, at.plusMonths(1).getMonth),
+        href     := url(at.plusMonths(1).getYear, at.plusMonths(1).getMonthValue),
         dataIcon := Icon.GreaterThan
       )
     )
