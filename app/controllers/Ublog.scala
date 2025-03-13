@@ -303,7 +303,7 @@ final class Ublog(env: Env) extends LilaController(env):
         env.ublog.bestOf
           .liveByYear(page)
           .map:
-            views.ublog.ui.yearPaginate
+            views.ublog.ui.year
 
   def bestOfMonth(year: Int, month: Int, page: Int) = Open:
     NotForKids:
