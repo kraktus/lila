@@ -1,5 +1,6 @@
 package lila.ublog
 
+import java.time.temporal.ChronoUnit
 import java.time.{ Year, YearMonth, ZoneOffset, LocalTime }
 
 import scala.util.Try
@@ -14,11 +15,15 @@ import lila.memo.CacheApi
 object UblogBestOf:
 
   private val ublogOrigin      = YearMonth.of(2021, 9)
+  private def nbMonthsBackward = 
+    ublogOrigin.until(currentYearMonth, ChronoUnit.MONTHS).toInt
+  
   private def currentYearMonth = YearMonth.now(ZoneOffset.UTC)
   def allYears                 = (ublogOrigin.getYear to currentYearMonth.getYear + 1).toList
 
   def selector(month: YearMonth) =
     val (start, end) = boundsOfMonth(month)
+    // to hit topic prod index
     $doc("topics".$ne(UblogTopic.offTopic), "lived.at".$gt(start).$lt(end))
 
   private def boundsOfMonth(month: YearMonth): (Instant, Instant) =
@@ -27,13 +32,12 @@ object UblogBestOf:
     (start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC))
 
   def readYear(year: Int): Option[Year] =
-    allYears.contains(year).so(Try(Year.of(year)).toOption)
+    (ublogOrigin.getYear <= year && year <= currentYearMonth.getYear).so(Try(Year.of(year)).toOption)
 
   def readYearMonth(year: Int, month: Int): Option[YearMonth] =
-    safeYearMonth(year, month).filter: ym =>
-      ym.isAfter(ublogOrigin) || ym == (ublogOrigin) && (ym.isBefore(
-        currentYearMonth
-      ) || ym == (currentYearMonth))
+    Try(YearMonth.of(year, month)).toOption.filter: ym =>
+      // writing it as negative allow bounds to be included
+      !(ym.isBefore(ublogOrigin) || ym.isAfter(currentYearMonth))
 
   private def monthsBack(n: Int): YearMonth =
     currentYearMonth.minusMonths(n)
@@ -117,14 +121,11 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
   def liveByYear(page: Int): Fu[Paginator[UblogBestOf.WithPosts]] =
     Paginator(
       adapter = new AdapterLike[UblogBestOf.WithPosts]:
-        // TODO why is this 10 * maxPerPage.value?
-        def nbResults: Fu[Int] = fuccess(10 * maxPerPage.value)
+        def nbResults: Fu[Int] = fuccess(UblogBestOf.nbMonthsBackward)
         def slice(offset: Int, length: Int) =
           paginatorQuery(offset = offset, length = length)
       ,
       currentPage = page,
       maxPerPage = maxPerPage
-    ).pp("liveByYear")
+    )
 
-private def safeYearMonth(year: Int, month: Int): Option[YearMonth] =
-  Try(YearMonth.of(year, month)).toOption

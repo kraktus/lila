@@ -325,7 +325,7 @@ final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.
         main(cls := "page-menu")(
           menu(Right("best-of")),
           div(cls := "page-menu__content box")(
-            boxTop(h1(s"Bests blogs per months")),
+            boxTop(h1(s"Bests blogs per month")),
             div(cls := "ublog-topics infinite-scroll")(
               bests.currentPageResults.map { case UblogBestOf.WithPosts(yearMonth, posts) =>
                 a(
