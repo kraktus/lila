@@ -6,6 +6,8 @@ import scala.util.Try
 
 import reactivemongo.api.bson.BSONNull
 
+import scalalib.paginator.{ AdapterLike, Paginator }
+
 import lila.db.dsl.{ *, given }
 import lila.memo.CacheApi
 
@@ -87,7 +89,8 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
                     "timelessRank" -> $doc("$subtract" -> $arr("$rank", "$lived.at"))
                   )
                 ),
-                Sort(Descending("timelessRank"))
+                Sort(Descending("timelessRank")),
+                Limit(4)
               )
         ) -> List(
           Project($doc("all" -> $doc("$objectToArray" -> "$$ROOT"))),
@@ -102,6 +105,20 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
           yearMonth = UblogBestOf.monthsBack(offset + monthsBack)
           posts <- doc.getAsOpt[List[UblogPost.PreviewPost]]("v.posts")
         yield UblogBestOf.WithPosts(yearMonth, posts)
+
+  private val maxPerPage = MaxPerPage(12) // a year
+
+  def liveByYear(page: Int): Fu[Paginator[UblogBestOf.WithPosts]] =
+    Paginator(
+      adapter = new AdapterLike[UblogBestOf.WithPosts]:
+        // TODO why is this 10 * maxPerPage.value?
+        def nbResults: Fu[Int] = fuccess(10 * maxPerPage.value)
+        def slice(offset: Int, length: Int) =
+          paginatorQuery(offset = offset, length = length)
+      ,
+      currentPage = page,
+      maxPerPage = maxPerPage
+    )
 
 private def safeYearMonth(year: Int, month: Int): Option[YearMonth] =
   Try(YearMonth.of(year, month)).toOption
