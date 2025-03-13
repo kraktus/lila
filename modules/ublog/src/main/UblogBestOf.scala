@@ -96,14 +96,20 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
           Project($doc("all" -> $doc("$objectToArray" -> "$$ROOT"))),
           UnwindField("all"),
           ReplaceRootField("all"),
-          Sort(Ascending("k"))
+          Project(
+            $doc(
+              "v"          -> true,
+              "monthsBack" -> $doc("$toInt" -> "$k")
+            )
+          ),
+          Sort(Ascending("monthsBack"))
         )
       .map: docs =>
         for
           doc        <- docs
-          monthsBack <- doc.int("k")
+          monthsBack <- doc.int("monthsBack")
           yearMonth = UblogBestOf.monthsBack(offset + monthsBack)
-          posts <- doc.getAsOpt[List[UblogPost.PreviewPost]]("v.posts")
+          posts <- doc.getAsOpt[List[UblogPost.PreviewPost]]("v")
         yield UblogBestOf.WithPosts(yearMonth, posts)
 
   private val maxPerPage = MaxPerPage(12) // a year
@@ -118,7 +124,7 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
       ,
       currentPage = page,
       maxPerPage = maxPerPage
-    )
+    ).pp("liveByYear")
 
 private def safeYearMonth(year: Int, month: Int): Option[YearMonth] =
   Try(YearMonth.of(year, month)).toOption
