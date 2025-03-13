@@ -238,7 +238,7 @@ final class UblogApi(
             )
           ,
           UnwindField("user"),
-          Project(previewPostProjection ++ $doc("blog" -> "$blog._id")),
+          Project(previewPostProjection),
           Skip(offset),
           Limit(length)
         )
