@@ -325,8 +325,8 @@ final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.
         main(cls := "page-menu")(
           menu(Right("best-of")),
           div(cls := "page-menu__content box")(
-            boxTop(h1(s"best of last Year")),
-            div(cls := "ublog-topics")(
+            boxTop(h1(s"Bests blogs per months")),
+            div(cls := "ublog-topics infinite-scroll")(
               bests.currentPageResults.map { case UblogBestOf.WithPosts(yearMonth, posts) =>
                 a(
                   cls  := "ublog-topics__topic",
@@ -345,30 +345,6 @@ final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.
             )
           )
         )
-
-        //     .js(posts.hasNextPage.option(infiniteScrollEsmInit)):
-        // main(cls := "page-menu")(
-        //   menu(Right(menuItem)),
-        //   div(cls := "page-menu__content box box-pad ublog-index")(
-        //     header | boxTop(
-        //       h1(title),
-        //       byDate.map: v =>
-        //         span(
-        //           "Sort by ",
-        //           span(cls := "btn-rack")(
-        //             a(cls := s"btn-rack__btn${(!v).so(" active")}", href := route(1, false.some))("rank"),
-        //             a(cls := s"btn-rack__btn${v.so(" active")}", href := route(1, true.some))("date")
-        //           )
-        //         )
-        //     ),
-        //     if posts.nbResults > 0 then
-        //       div(cls := "ublog-index__posts ublog-post-cards infinite-scroll")(
-        //         posts.currentPageResults.map { card(_, showAuthor = ShowAt.top) },
-        //         pagerNext(posts, np => route(np, byDate).url)
-        //       )
-        //     else div(cls := "ublog-index__posts--empty")(onEmpty)
-        //   )
-        // )
 
   def urlOfBlog(blog: UblogBlog): Call = urlOfBlog(blog.id)
   def urlOfBlog(blogId: UblogBlog.Id): Call = blogId match
