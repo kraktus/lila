@@ -24,9 +24,8 @@ object UblogBestOf:
     val end   = month.atEndOfMonth().atTime(LocalTime.MAX)
     (start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC))
 
-    // TODO sanitize input
   def readYear(year: Int): Option[Year] =
-    Try(Year.of(year)).toOption
+    allYears.contains(year).so(Try(Year.of(year)).toOption)
 
   def readYearMonth(year: Int, month: Int): Option[YearMonth] =
     safeYearMonth(year, month).filter: ym =>
@@ -34,9 +33,17 @@ object UblogBestOf:
         currentYearMonth
       ) || ym == (currentYearMonth))
 
+  private def monthsBack(n: Int): YearMonth =
+    currentYearMonth.minusMonths(n)
+
+  // from `now` go back to `offset` months and from that point gives all `length` precedecing months
+  def slice(offset: Int, length: Int): Seq[(YearMonth, Int)] =
+    val from = currentYearMonth.minusMonths(offset)
+    (0 to length).map(x => from.minusMonths(x.toInt)).zip((0 to length))
+
   case class WithPosts(yearMonth: YearMonth, posts: List[UblogPost.PreviewPost])
 
-final class UblogBestOfApi(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheApi)(using Executor):
+final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheApi)(using Executor):
 
   import UblogBsonHandlers.{ *, given }
 
@@ -64,6 +71,37 @@ final class UblogBestOfApi(colls: UblogColls, ublogApi: UblogApi, cacheApi: Cach
       a <- withPostsCache.get(curYear)
       b <- withPostsCache.get(curYear.minusYears(1))
     yield (a ++ b).take(12)
+
+  def paginatorQuery(offset: Int, length: Int): Fu[List[UblogBestOf.WithPosts]] =
+    colls.post
+      .aggregateList(length, _.sec): framework =>
+        import framework.*
+        Facet(
+          UblogBestOf
+            .slice(offset = offset, length = length)
+            .map: (month, i) =>
+              s"$i" -> List(
+                Match($doc("live" -> true) ++ UblogBestOf.selector(month)),
+                Project(
+                  previewPostProjection ++ $doc(
+                    "timelessRank" -> $doc("$subtract" -> $arr("$rank", "$lived.at"))
+                  )
+                ),
+                Sort(Descending("timelessRank"))
+              )
+        ) -> List(
+          Project($doc("all" -> $doc("$objectToArray" -> "$$ROOT"))),
+          UnwindField("all"),
+          ReplaceRootField("all"),
+          Sort(Ascending("k"))
+        )
+      .map: docs =>
+        for
+          doc        <- docs
+          monthsBack <- doc.int("k")
+          yearMonth = UblogBestOf.monthsBack(offset + monthsBack)
+          posts <- doc.getAsOpt[List[UblogPost.PreviewPost]]("v.posts")
+        yield UblogBestOf.WithPosts(yearMonth, posts)
 
 private def safeYearMonth(year: Int, month: Int): Option[YearMonth] =
   Try(YearMonth.of(year, month)).toOption
