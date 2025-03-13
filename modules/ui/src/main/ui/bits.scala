@@ -34,13 +34,17 @@ object bits:
     )
 
   // url: (year: Int, month: Int)
-  def calendarMselect(id: String, allYears: List[Int], url: (Int, Int) => play.api.mvc.Call)(at: YearMonth)(
-      using lang: Lang
+  def calendarMselect(
+      helpers: Helpers,
+      id: String,
+      allYears: List[Int],
+      url: (Int, Int) => play.api.mvc.Call
+  )(at: YearMonth)(using
+      Lang
   ) =
+    import helpers.showMonth
     val prefix                   = s"calendar-mselect"
     def prefixed(suffix: String) = s"${prefix}$suffix"
-    // TODO FIXME how to access DateHelper.showMonth
-    def showMonth(m: Month) = m.toString
     div(cls := s"$prefix $prefix--$id")(
       a(
         href     := url(at.minusMonths(1).getYear, at.minusMonths(1).getMonthValue),

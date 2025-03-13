@@ -224,11 +224,14 @@ final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.
       menuItem = "best-of",
       route = (p, bd) => routes.Ublog.bestOfMonth(yearMonth.getYear, yearMonth.getMonthValue, p),
       onEmpty = "Nothing to show.",
-      header = div(cls := "ublog-index__calendar")(lila.ui.bits.calendarMselect(
-        "best-of",
-        UblogBestOf.allYears,
-        (y, m) => routes.Ublog.bestOfMonth(y, m)
-      )(yearMonth)).some
+      header = div(cls := "ublog-index__calendar")(
+        lila.ui.bits.calendarMselect(
+          helpers,
+          "best-of",
+          UblogBestOf.allYears,
+          (y, m) => routes.Ublog.bestOfMonth(y, m)
+        )(yearMonth)
+      ).some
     )
 
   private def list(
@@ -238,7 +241,7 @@ final class UblogUi(helpers: Helpers, atomUi: AtomUi)(picfitUrl: lila.core.misc.
       route: (Int, Option[Boolean]) => Call,
       onEmpty: => Frag,
       byDate: Option[Boolean] = None,
-      header: Option[Frag] = None,
+      header: Option[Frag] = None
   )(using Context) =
     Page(title)
       .css("bits.ublog")
