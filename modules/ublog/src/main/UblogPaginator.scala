@@ -76,8 +76,7 @@ final class UblogPaginator(
       maxPerPage = maxPerPage
     )
 
-  // All blogs ranked by `rank` lived during a specific month
-  // TODO FIXME use `timeless` ranking instead of `rank`
+  // All blogs ranked by `ByTimelessRank` lived during a specific month
   def liveByMonth(month: YearMonth, page: Int): Fu[Paginator[PreviewPost]] =
     Paginator(
       adapter = new AdapterLike[PreviewPost]:
