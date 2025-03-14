@@ -20,6 +20,7 @@ final class UblogPaginator(
   import UblogBsonHandlers.{ *, given }
   import UblogPost.PreviewPost
   import ublogApi.aggregateVisiblePosts
+  import UblogRank.Type.{ ByDate, ByRank, ByTimelessRank }
 
   val maxPerPage = MaxPerPage(9)
 
@@ -69,7 +70,7 @@ final class UblogPaginator(
       adapter = new AdapterLike[PreviewPost]:
         def nbResults: Fu[Int] = fuccess(10 * maxPerPage.value)
         def slice(offset: Int, length: Int) =
-          aggregateVisiblePosts($doc("topics" -> topic), offset, length, byDate)
+          aggregateVisiblePosts($doc("topics" -> topic), offset, length, if byDate then ByDate else ByRank)
       ,
       currentPage = page,
       maxPerPage = maxPerPage
@@ -83,7 +84,7 @@ final class UblogPaginator(
         def nbResults: Fu[Int] = fuccess(10 * maxPerPage.value)
         def slice(offset: Int, length: Int) =
           // topics included to hit prod index
-          aggregateVisiblePosts(UblogBestOf.selector(month), offset, length)
+          aggregateVisiblePosts(UblogBestOf.selector(month), offset, length, ByTimelessRank)
       ,
       currentPage = page,
       maxPerPage = maxPerPage

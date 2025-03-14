@@ -14,10 +14,10 @@ import lila.memo.CacheApi
 
 object UblogBestOf:
 
-  private val ublogOrigin      = YearMonth.of(2021, 9)
-  private def nbMonthsBackward = 
+  private val ublogOrigin = YearMonth.of(2021, 9)
+  private def nbMonthsBackward =
     ublogOrigin.until(currentYearMonth, ChronoUnit.MONTHS).toInt
-  
+
   private def currentYearMonth = YearMonth.now(ZoneOffset.UTC)
   def allYears                 = (ublogOrigin.getYear to currentYearMonth.getYear + 1).toList
 
@@ -86,16 +86,9 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
           UblogBestOf
             .slice(offset = offset, length = length)
             .map: (month, i) =>
-              s"$i" -> List(
-                Match($doc("live" -> true) ++ UblogBestOf.selector(month)),
-                Project(
-                  previewPostProjection ++ $doc(
-                    "timelessRank" -> $doc("$subtract" -> $arr("$rank", "$lived.at"))
-                  )
-                ),
-                Sort(Descending("timelessRank")),
-                Limit(4)
-              )
+              s"$i" -> ((Match(
+                $doc("live" -> true) ++ UblogBestOf.selector(month)
+              ) :: UblogRank.Type.ByTimelessRank.sortingQuery(colls.post, framework)) :+ Limit(4))
         ) -> List(
           Project($doc("all" -> $doc("$objectToArray" -> "$$ROOT"))),
           UnwindField("all"),
@@ -128,4 +121,3 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
       currentPage = page,
       maxPerPage = maxPerPage
     )
-
