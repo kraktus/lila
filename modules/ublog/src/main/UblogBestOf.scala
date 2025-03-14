@@ -53,31 +53,6 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
 
   import UblogBsonHandlers.{ *, given }
 
-  // FIXME 12 queries for one cache entry!!
-  // compose aggregation to fix
-  private val withPostsCache =
-    // the seq is sorted by most recent first
-    cacheApi[Year, Seq[UblogBestOf.WithPosts]](16, "ublog.bestOf.withPosts"):
-      _.refreshAfterWrite(1.hour).buildAsyncFuture: year =>
-        (1 to 12)
-          .map(x => year.atMonth(x))
-          .map: month =>
-            ublogApi
-              .aggregateVisiblePosts(UblogBestOf.selector(month), 0, 4)
-              .map: preview =>
-                UblogBestOf.WithPosts(month, preview)
-          .parallel
-          .map(_.sortBy(_.yearMonth)(Ordering[YearMonth].reverse))
-
-  def ofYear(year: Year): Fu[Seq[UblogBestOf.WithPosts]] = withPostsCache.get(year)
-  // latest 12 months rolling
-  def latest =
-    val curYear = Year.now(ZoneOffset.UTC)
-    for
-      a <- withPostsCache.get(curYear)
-      b <- withPostsCache.get(curYear.minusYears(1))
-    yield (a ++ b).take(12)
-
   def paginatorQuery(offset: Int, length: Int): Fu[List[UblogBestOf.WithPosts]] =
     colls.post
       .aggregateList(length, _.sec): framework =>
