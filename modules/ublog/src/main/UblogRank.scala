@@ -91,7 +91,7 @@ object UblogRank:
             Project(
               $doc(
                 "timelessRank" -> $doc("$subtract" -> $arr("$rank", "$lived.at"))
-              )
+              ) ++ UblogBsonHandlers.previewPostProjection
             ),
             Sort(Descending("timelessRank"))
           )

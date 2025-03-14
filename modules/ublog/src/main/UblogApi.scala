@@ -217,7 +217,6 @@ final class UblogApi(
         Match(select ++ $doc("live" -> true)) -> (ranking.sortingQuery(colls.post, framework) ++
           List(Limit(500))
           ++ removeUnlistedOrClosed(colls.post, framework) ++ List(
-            Project(previewPostProjection),
             Skip(offset),
             Limit(length)
           ))
@@ -255,5 +254,6 @@ final class UblogApi(
           )
         )
       ,
-      UnwindField("user")
+      UnwindField("user"),
+      Project(previewPostProjection ++ $doc("blog" -> "$blog._id"))
     )

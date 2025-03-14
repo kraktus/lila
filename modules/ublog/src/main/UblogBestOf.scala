@@ -88,7 +88,7 @@ final class UblogBestOf(colls: UblogColls, ublogApi: UblogApi, cacheApi: CacheAp
             .map: (month, i) =>
               s"$i" -> (List(
                 Match($doc("live" -> true) ++ UblogBestOf.selector(month))
-              ) ++ UblogRank.Type.ByTimelessRank.sortingQuery(colls.post, framework) ++ List(
+              ) ++ UblogRank.Type.ByRank.sortingQuery(colls.post, framework) ++ List(
                 Limit(4)
               ) ++ ublogApi.removeUnlistedOrClosed(colls.post, framework))
         ) -> List(
