@@ -88,7 +88,7 @@ object ChatUi:
             .add("restricted" -> restricted)
             .add("voiceChat" -> (voiceChat && ctx.isAuth))
             .add(
-              "opponent" -> opponentId.map(id => Json.obj("user" -> Json.obj("id" -> id.value)))
+              "opponentId" -> opponentId
             ),
           "writeable" -> writeable,
           "public" -> public,

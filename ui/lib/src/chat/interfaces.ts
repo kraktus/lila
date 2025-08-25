@@ -41,7 +41,7 @@ export interface ChatData {
   restricted: boolean;
   voiceChat: boolean;
   hostIds?: string[];
-  opponent?: { user?: { id?: string } };
+  opponentId?: string;
 }
 
 export interface Line {
