@@ -161,20 +161,19 @@ final class Puzzle(env: Env, apiC: => Api) extends LilaController(env):
       bindForm(env.puzzle.forms.xxx)(
         jsonFormError,
         batch =>
-        // instead of shortcircuit, process all and return errors
-        // DEBUG FIXME TODO Propagate errors? keywords .runFold Validated
-            batch.votes
-              .sequentiallyRaise(puzzleVotes =>
-                  puzzleVotes.themes.sequentiallyRaise: themeVote =>
-                    env.puzzle.api.theme
-                      .vote(PuzzleId(puzzleVotes.puzzleId), themeVote.theme, themeVote.vote.some)
-                  .map(_._2.map(err => s"${puzzleVotes.puzzleId} vote failed: $err").raiseIfSome)
-              )
-          .map(
-            (_, errOpt) => errOpt match
-              case None => jsonOkResult
-              case Some(err) => BadRequest(jsonError(err))
-        ) 
+          // instead of shortcircuit, process all and return errors
+          // DEBUG FIXME TODO Propagate errors? keywords .runFold Validated
+          batch.votes
+            .sequentiallyRaise(puzzleVotes =>
+              puzzleVotes.themes
+                .sequentiallyRaise: themeVote =>
+                  env.puzzle.api.theme
+                    .vote(PuzzleId(puzzleVotes.puzzleId), themeVote.theme, themeVote.vote.some)
+                .map(_._2.map(err => s"${puzzleVotes.puzzleId} vote failed: $err").raiseIfSome)
+            )
+            .map(
+              _._2.fold(jsonOkResult)(err => BadRequest(jsonError(err)))
+            )
       )
 
   }
