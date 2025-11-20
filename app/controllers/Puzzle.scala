@@ -158,7 +158,6 @@ final class Puzzle(env: Env, apiC: => Api) extends LilaController(env):
 
   def apiBatchVoteThemes = ScopedBody(_.Puzzle.Write) { _ ?=> me ?=>
     NoBot:
-      import lila.puzzle.PuzzleTheme.VoteError.*
       bindForm(env.puzzle.forms.xxx)(
         jsonFormError,
         batch =>
@@ -168,9 +167,7 @@ final class Puzzle(env: Env, apiC: => Api) extends LilaController(env):
                 allow:
                   env.puzzle.api.theme
                     .vote(PuzzleId(puzzleVotes.puzzleId), themeVote.theme, themeVote.vote.some)
-                .rescue:
-                  case Fail(msg) => funit
-                  case Unchanged => funit
+                .rescue(_ => funit)
             )
           jsonOkResult // DEBUG FIXME TODO Propagate errors?
       )
