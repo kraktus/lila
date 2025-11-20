@@ -158,7 +158,7 @@ final class Puzzle(env: Env, apiC: => Api) extends LilaController(env):
 
   def apiBatchVoteThemes = ScopedBody(_.Puzzle.Write) { _ ?=> me ?=>
     NoBot:
-      bindForm(env.puzzle.forms.xxx)(
+      bindForm(env.puzzle.forms.batchVotes)(
         jsonFormError,
         batch =>
           // instead of shortcircuit, process all and return errors

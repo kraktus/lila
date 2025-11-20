@@ -64,7 +64,7 @@ object PuzzleForm:
   )(ThemeVote.apply)(unapply)
 
   // form with a list of `themeVotes`
-  val xxx = Form(
+  val batchVotes = Form(
     mapping(
       "votes" -> list(
         mapping(
